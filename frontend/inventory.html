@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1800 Soles | Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body data-page="inventory">
+  <aside class="sidebar">
+    <div class="brand"><img src="/images/logo.png" alt="1800 Soles logo"><span>1800<br>SOLES</span></div>
+    <div class="menu">
+      <a data-page="home" href="/home.html"><i class="fa fa-house"></i> HOME</a>
+      <a data-page="inventory" class="active" href="/inventory.html"><i class="fa fa-box"></i> INVENTORY</a>
+      <a data-page="analytics" href="/analytics.html"><i class="fa fa-chart-column"></i> ANALYTICS</a>
+      <a data-page="settings" href="/settings.html"><i class="fa fa-gear"></i> SETTINGS</a>
+    </div>
+    <div class="logout">
+      <button id="logoutBtn"><i class="fa fa-right-from-bracket"></i> LOG OUT</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <h1 class="page-title center-title">Inventory Management</h1>
+    <p class="page-sub center-sub">Track and manage your stock levels</p>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="inventoryList">Inventory</button>
+      <button class="tab-btn" data-tab="activityLog">Activity Log</button>
+    </div>
+    <div id="inventoryList">
+      <div class="search-row">
+        <input id="searchInput" placeholder="Search by item name, colorway, brand, or SKU...">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ITEM NAME</th>
+              <th>AVAILABLE QTY</th>
+              <th>LAST MOVEMENT</th>
+              <th>STATUS</th>
+              <th>ITEM DETAILS</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTable"></tbody>
+        </table>
+      </div>
+      <div class="table-pagination" id="inventoryPagination">
+        <button class="page-arrow-btn" id="inventoryPrevPage" type="button" aria-label="Previous inventory page">&lt;-</button>
+        <span class="page-indicator" id="inventoryPageInfo">Page 1 of 1</span>
+        <button class="page-arrow-btn" id="inventoryNextPage" type="button" aria-label="Next inventory page">-&gt;</button>
+      </div>
+      <div class="floating-bar">
+        <button class="outlined-btn" id="downloadCsv"><i class="fa fa-file-arrow-down"></i> Download CSV File</button>
+        <button class="solid-btn add-item-btn" id="addItemBtn"><i class="fa fa-plus"></i> ADD ITEM</button>
+      </div>
+    </div>
+    <div id="activityLog" style="display:none;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>DATE/TIME</th>
+              <th>ITEM</th>
+              <th>ACTION</th>
+              <th>QUANTITY</th>
+              <th>SOLD PRICE</th>
+            </tr>
+          </thead>
+          <tbody id="activityTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <template id="addItemModalTemplate">
+    <div class="modal-shell modal-item-form">
+      <div class="modal-header">
+        <h2 id="addItemModalTitle">Add New Item</h2>
+        <button class="close-btn" type="button" data-close-modal>&times;</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Item Name *</label><input class="input" id="aiName" placeholder="e.g. Nike Dunk Low"></div>
+        <div class="form-group"><label>SKU / Style Code *</label><input class="input" id="aiSku" placeholder="e.g. DD1391-100"></div>
+        <div class="form-group"><label>Colorway *</label><input class="input" id="aiColor" placeholder="e.g. Orange Paisley"></div>
+        <div class="form-group">
+          <label>Brand</label>
+          <select class="input" id="aiBrand">
+            <option value="">-- Select Brand --</option>
+            <option value="1">Nike</option>
+            <option value="2">Adidas</option>
+            <option value="3">Puma</option>
+            <option value="4">New Balance</option>
+            <option value="5">Others</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Target Quantity <em>(For Waiting Stock Threshold)</em> *</label><input class="input" id="aiTargetQty" type="number" min="1" step="1" placeholder="e.g. 5"></div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+        <button class="secondary-btn" type="button" data-close-modal>Cancel</button>
+        <button class="solid-btn" type="button" id="saveItemBtn">Create Item</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="itemDetailsModalTemplate">
+    <div class="modal-shell modal-item-details">
+      <div class="modal-header">
+        <h2>Item Details</h2>
+        <button class="close-btn" type="button" data-close-modal>&times;</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+        <div>
+          <div><strong>Item Name:</strong> <span id="detailItemName"></span></div>
+          <div><strong>Colorway:</strong> <span id="detailColorway"></span></div>
+          <div><strong>Condition:</strong> <span id="detailCondition">Brand New</span></div>
+          <div><strong>Available Quantity:</strong> <span id="detailQty"></span></div>
+          <div><strong>Target Quantity:</strong> <span id="detailTargetQty"></span></div>
+        </div>
+        <div>
+          <div><strong>SKU / Style Code:</strong> <span id="detailSku"></span></div>
+          <div><strong>Brand:</strong> <span id="detailBrand"></span></div>
+          <div><strong>Status:</strong> <span class="status-pill" id="detailStatus"></span></div>
+          <div class="waiting-alert" id="detailWaitingAlert" style="display:none;"></div>
+          <div><strong>Total Sold:</strong> <span id="detailTotalSold"></span></div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin:12px 0;">
+        <button class="solid-btn" id="stockInBtn" type="button">+ Stock In</button>
+        <button class="outlined-btn" id="editItemFromDetailsBtn" type="button"><i class="fa fa-pen"></i> Edit Item</button>
+      </div>
+      <h4>Pairs under SKU: <span id="detailPairsSku"></span></h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Pair ID</th><th>Size</th><th>Gender</th><th>Condition</th><th>Cost Price</th><th>Selling Price</th><th>Availability</th><th>Sold Date</th></tr></thead>
+          <tbody id="detailPairsTableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-pagination" id="pairsPagination">
+        <button class="page-arrow-btn" id="pairsPrevPage" type="button" aria-label="Previous pairs page">&lt;-</button>
+        <span class="page-indicator" id="pairsPageInfo">Page 1 of 1</span>
+        <button class="page-arrow-btn" id="pairsNextPage" type="button" aria-label="Next pairs page">-&gt;</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="stockInModalTemplate">
+    <div class="modal-shell modal-pair-form">
+      <div class="modal-header">
+        <h3 id="stockInModalTitle">Stock In New Pair</h3>
+        <button class="close-btn" type="button" data-close-modal>&times;</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group" id="stockInPairIdGroup" style="display:none;"><label>Pair ID</label><input class="input" id="siPairCode" disabled></div>
+        <div class="form-group"><label>US Size *</label><input class="input" id="siSize" placeholder="e.g. 7, 8.5, 10"></div>
+        <div class="form-group"><label>Gender *</label>
+          <select class="input" id="siGender">
+            <option value="">-- Select Gender --</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Condition *</label>
+          <select class="input" id="siCondition">
+            <option value="New">New</option>
+            <option value="Like New">Like New</option>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Cost Price (Php) *</label><input class="input" id="siCost" type="number"></div>
+        <div class="form-group"><label>Selling Price (Php) *</label><input class="input" id="siSell" type="number"></div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button class="solid-btn" id="savePairBtn" type="button">Save Pair</button>
+        <button class="secondary-btn" type="button" data-close-modal>Cancel</button>
+      </div>
+    </div>
+  </template>
+
+  <div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="genericModal"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1800 Soles | Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body data-page="analytics">
+  <aside class="sidebar">
+    <div class="brand"><img src="/images/logo.png" alt="1800 Soles logo"><span>1800<br>SOLES</span></div>
+    <div class="menu">
+      <a data-page="home" href="/home.html"><i class="fa fa-house"></i> HOME</a>
+      <a data-page="inventory" href="/inventory.html"><i class="fa fa-box"></i> INVENTORY</a>
+      <a data-page="analytics" class="active" href="/analytics.html"><i class="fa fa-chart-column"></i> ANALYTICS</a>
+      <a data-page="settings" href="/settings.html"><i class="fa fa-gear"></i> SETTINGS</a>
+    </div>
+    <div class="logout">
+      <button id="logoutBtn"><i class="fa fa-right-from-bracket"></i> LOG OUT</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <h1 class="page-title center-title">Analytics Dashboard</h1>
+    <p class="page-sub center-sub">Comprehensive insights into your inventory performance</p>
+
+    <div class="kpi-grid kpi-grid-four" id="analyticsTop"></div>
+    <div class="analytics-chart-grid">
+      <article class="card analytics-chart-card">
+        <h3 class="analytics-chart-title">Sales Trend</h3>
+        <p class="analytics-chart-sub">Revenue and sold pairs over time</p>
+        <div class="analytics-canvas-wrap"><canvas id="chartSalesTrend"></canvas></div>
+      </article>
+
+      <article class="card analytics-chart-card">
+        <h3 class="analytics-chart-title">Stock Movement Trend</h3>
+        <p class="analytics-chart-sub">Stock In vs Sold actions</p>
+        <div class="analytics-canvas-wrap"><canvas id="chartMovementTrend"></canvas></div>
+      </article>
+
+      <article class="card analytics-chart-card">
+        <h3 class="analytics-chart-title">Stock Status Distribution</h3>
+        <p class="analytics-chart-sub">Current stock level split</p>
+        <div class="analytics-canvas-wrap"><canvas id="chartStockStatusDistribution"></canvas></div>
+      </article>
+
+      <article class="card analytics-chart-card">
+        <h3 class="analytics-chart-title">Brand Distribution</h3>
+        <p class="analytics-chart-sub">Available pairs by brand</p>
+        <div class="analytics-canvas-wrap"><canvas id="chartBrandDistribution"></canvas></div>
+      </article>
+
+      <article class="card analytics-chart-card span-2">
+        <h3 class="analytics-chart-title">Size Distribution</h3>
+        <p class="analytics-chart-sub">Available pairs by size</p>
+        <div class="analytics-canvas-wrap"><canvas id="chartSizeDistribution"></canvas></div>
+      </article>
+    </div>
+  </main>
+
+  
+
+  <template id="profitByMonthModalTemplate">
+    <div class="modal-shell">
+      <div class="modal-header">
+        <h2>Profit Per Month</h2>
+        <button class="close-btn" type="button" data-close-modal>&times;</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Sold Pairs</th>
+              <th>Total Sales</th>
+              <th>Total Cost</th>
+              <th>Total Profit</th>
+            </tr>
+          </thead>
+          <tbody id="profitByMonthTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </template>
+
+  <div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="genericModal"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

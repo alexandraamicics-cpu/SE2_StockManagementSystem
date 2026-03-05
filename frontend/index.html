@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1800 Soles | Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="auth-wrapper">
+    <section class="auth-hero">
+      <div class="brand-mark">
+        <img src="/images/logo.png" alt="1800 Soles logo">
+      </div>
+      <h1>Stock Management System</h1>
+      <p class="hero-location">Cainta <i class="fa-solid fa-circle"></i> Rizal <i class="fa-solid fa-circle"></i> Manila</p>
+      <p>Your trusted partner for inventory tracking and business insights</p>
+    </section>
+
+    <section class="auth-card">
+      <div class="tab-switch">
+        <button id="loginTab" class="active">Log In</button>
+        <button id="signupTab">Sign Up</button>
+      </div>
+
+      <div id="loginForm">
+        <h2 class="form-title">Welcome Back</h2>
+        <p class="form-sub">Enter your credentials to continue</p>
+        <div class="form-group">
+          <label>Username or Email *</label>
+          <input class="input" id="loginIdentifier" placeholder="Enter username or email">
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <div style="position:relative">
+            <input type="password" class="input" id="loginPassword" placeholder="Enter your password">
+            <i class="fa fa-eye" id="toggleLoginPass" style="position:absolute; right:12px; top:12px; color:#b3a399; cursor:pointer"></i>
+          </div>
+        </div>
+        <div style="text-align:right; margin-bottom:12px;">
+          <a href="#" id="forgotLink">Forgot password?</a>
+        </div>
+        <button class="primary-btn" id="loginBtn">Login</button>
+      </div>
+
+      <div id="signupForm" style="display:none;">
+        <h2 class="form-title">Create Account</h2>
+        <p class="form-sub">Fill in the details to get started</p>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input class="input" id="suLastName" placeholder="Enter last name">
+        </div>
+        <div class="form-group">
+          <label>First Name *</label>
+          <input class="input" id="suFirstName" placeholder="Enter first name">
+        </div>
+        <div class="input-inline">
+          <div class="form-group">
+            <label>Middle Name *</label>
+            <input class="input" id="suMiddleName" placeholder="Enter middle name">
+          </div>
+          <div class="form-group">
+            <label>Suffix</label>
+            <select class="input" id="suSuffix">
+              <option value="">Suffix</option>
+              <option value="Jr.">Jr.</option>
+              <option value="II">II</option>
+              <option value="III">III</option>
+            </select>
+          </div>
+        </div>
+        <div class="input-inline">
+          <div class="form-group">
+            <label>Gender *</label>
+            <select class="input" id="suGender">
+              <option value="">Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Phone Number (+639) *</label>
+            <div class="phone-input-wrap">
+              <span class="phone-prefix">+639</span>
+              <input class="input phone-input" id="suPhone" inputmode="numeric" maxlength="9" placeholder="123456789">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Role *</label>
+          <input class="input" id="suRole" placeholder="Enter role">
+        </div>
+        <div class="form-group">
+          <label>Username *</label>
+          <input class="input" id="suUsername" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input class="input" id="suEmail" placeholder="Enter email">
+        </div>
+        <div class="input-inline">
+          <div class="form-group">
+            <label>Password *</label>
+            <div style="position:relative">
+              <input type="password" class="input" id="suPass" placeholder="At least 8 chars, uppercase, lowercase, number, special">
+              <i class="fa fa-eye" id="toggleSupass1" style="position:absolute; right:12px; top:12px; color:#b3a399; cursor:pointer"></i>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password *</label>
+            <div style="position:relative">
+              <input type="password" class="input" id="suPass2" placeholder="Repeat password (must match)">
+              <i class="fa fa-eye" id="toggleSupass2" style="position:absolute; right:12px; top:12px; color:#b3a399; cursor:pointer"></i>
+            </div>
+          </div>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="suAgree">
+          <label for="suAgree">I agree with the <a href="#" id="termsLink">terms and conditions</a></label>
+        </div>
+        <button class="primary-btn" id="signupBtn">Sign up</button>
+        <div style="text-align:center; margin-top:8px;">Already have an account? <a href="#" id="gotoLogin">Log in</a></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="modal-backdrop terms-backdrop" id="termsBackdrop">
+    <div class="modal terms-modal" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
+      <div class="modal-header">
+        <h2 id="termsTitle">Terms and Conditions</h2>
+        <button class="close-btn" id="termsCloseIcon" type="button">&times;</button>
+      </div>
+      <div class="terms-content">
+        <p>By creating an account in 1800 Soles, you agree to the following:</p>
+        <ul>
+          <li>You will provide accurate profile information and keep it updated.</li>
+          <li>You are responsible for all actions made using your account credentials.</li>
+          <li>Inventory, pricing, and sales records entered in the system are your responsibility.</li>
+          <li>You will not attempt to misuse, disrupt, or access unauthorized system data.</li>
+          <li>Password-reset emails and security alerts are sent to your registered email address.</li>
+          <li>1800 Soles may suspend accounts that violate these terms or abuse the platform.</li>
+        </ul>
+        <p>These terms are intended to protect account security and data integrity for all users.</p>
+      </div>
+      <div class="terms-actions">
+        <button class="secondary-btn" id="termsCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+</body>
+</html>
