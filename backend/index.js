@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const mysql = require('mysql2/promise');
+const { getDbConfig, validateDbConfig } = require('./utils/dbConfig');
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
@@ -20,58 +21,64 @@ const overviewRoutes = require('./routes/overview');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const dbConfig = getDbConfig();
 
-function getDbConfig() {
-  const {
-    DATABASE_URL,
-    MYSQL_URL,
-    DB_HOST,
-    DB_USER,
-    DB_PASSWORD,
-    DB_NAME,
-    DB_PORT,
-    MYSQLHOST,
-    MYSQLUSER,
-    MYSQLPASSWORD,
-    MYSQLDATABASE,
-    MYSQLPORT
-  } = process.env;
-
-  if (DATABASE_URL || MYSQL_URL) {
-    const url = new URL(DATABASE_URL || MYSQL_URL);
-    return {
-      host: url.hostname,
-      user: decodeURIComponent(url.username),
-      password: decodeURIComponent(url.password),
-      database: decodeURIComponent(url.pathname.replace(/^\//, '')),
-      port: Number(url.port || 3306)
-    };
-  }
-
-  return {
-    host: DB_HOST || MYSQLHOST || 'localhost',
-    user: DB_USER || MYSQLUSER || 'root',
-    password: DB_PASSWORD || MYSQLPASSWORD || '',
-    database: DB_NAME || MYSQLDATABASE || 'db_stock',
-    port: Number(DB_PORT || MYSQLPORT || '3306')
-  };
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const dbConfig = getDbConfig();
+function isRetryableDbError(err) {
+  return ['ECONNREFUSED', 'ETIMEDOUT', 'EHOSTUNREACH', 'PROTOCOL_CONNECTION_LOST'].includes(err && err.code);
+}
+
+async function withDbRetry(task, label, attempts = 10, delayMs = 3000) {
+  let lastError;
+
+  for (let i = 1; i <= attempts; i += 1) {
+    try {
+      return await task();
+    } catch (err) {
+      lastError = err;
+      if (!isRetryableDbError(err) || i === attempts) break;
+      console.warn(`${label} attempt ${i}/${attempts} failed (${err.code}). Retrying in ${delayMs}ms...`);
+      await sleep(delayMs);
+    }
+  }
+
+  throw lastError;
+}
+
+
+function prepareSchemaSql(schema, databaseName) {
+  const sanitized = String(schema || '')
+    .replace(/^\s*CREATE\s+DATABASE\s+IF\s+NOT\s+EXISTS\s+[^;]+;\s*$/gim, '')
+    .replace(/^\s*USE\s+[^;]+;\s*$/gim, '')
+    .trim();
+
+  return `CREATE DATABASE IF NOT EXISTS \`${databaseName}\`;
+USE \`${databaseName}\`;
+${sanitized}`;
+}
 
 async function ensureSchema() {
   const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
   if (!fs.existsSync(schemaPath)) return;
+
   const schema = fs.readFileSync(schemaPath, 'utf8');
-  const conn = await mysql.createConnection({
-    host: dbConfig.host,
-    user: dbConfig.user,
-    password: dbConfig.password,
-    port: dbConfig.port,
-    multipleStatements: true
-  });
-  await conn.query(schema);
-  await conn.end();
+  const schemaSql = prepareSchemaSql(schema, dbConfig.database);
+
+  await withDbRetry(async () => {
+    const conn = await mysql.createConnection({
+      host: dbConfig.host,
+      user: dbConfig.user,
+      password: dbConfig.password,
+      port: dbConfig.port,
+      multipleStatements: true
+    });
+
+    await conn.query(schemaSql);
+    await conn.end();
+  }, 'ensureSchema');
 }
 
 app.use(cors({
@@ -93,12 +100,17 @@ app.use('/api', (_req, res, next) => {
 
 async function start() {
   try {
+    validateDbConfig(dbConfig);
     await ensureSchema();
   } catch (err) {
-    console.error('Failed to ensure DB schema:', err);
+    console.error('Failed to ensure DB schema:', err.message || err);
   }
 
-  const sessionStore = new MySQLStore(dbConfig);
+  const sessionStore = new MySQLStore({
+    ...dbConfig,
+    createDatabaseTable: true
+  });
+
   app.set('trust proxy', 1);
   app.use(session({
     key: 'sessid',
