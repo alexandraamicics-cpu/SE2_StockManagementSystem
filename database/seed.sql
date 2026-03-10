@@ -1,4 +1,4 @@
-USE db_1800soles_stock_management;
+USE db_stock;
 
 DELETE FROM activity_log;
 DELETE FROM pairs;
