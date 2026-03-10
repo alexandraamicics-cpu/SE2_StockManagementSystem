@@ -1,26 +1,57 @@
-const mysql = require('mysql2/promise');
-const dotenv = require('dotenv');
+const fs = require('fs');
 const path = require('path');
+const mysql = require('mysql2/promise');
+require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+function getDbConfig() {
+  const {
+    DATABASE_URL,
+    MYSQL_URL,
+    DB_HOST,
+    DB_USER,
+    DB_PASSWORD,
+    DB_PORT,
+    MYSQLHOST,
+    MYSQLUSER,
+    MYSQLPASSWORD,
+    MYSQLPORT
+  } = process.env;
 
-const {
-  DB_HOST = 'localhost',
-  DB_USER = 'root',
-  DB_PASSWORD = '',
-  DB_NAME = 'db_1800soles_stock_management',
-  DB_PORT = '3306'
-} = process.env;
+  if (DATABASE_URL || MYSQL_URL) {
+    const url = new URL(DATABASE_URL || MYSQL_URL);
+    return {
+      host: url.hostname,
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      port: Number(url.port || 3306)
+    };
+  }
 
-const pool = mysql.createPool({
-  host: DB_HOST,
-  user: DB_USER,
-  password: DB_PASSWORD,
-  database: DB_NAME,
-  port: Number(DB_PORT),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  return {
+    host: DB_HOST || MYSQLHOST || 'localhost',
+    user: DB_USER || MYSQLUSER || 'root',
+    password: DB_PASSWORD || MYSQLPASSWORD || '',
+    port: Number(DB_PORT || MYSQLPORT || '3306')
+  };
+}
+
+async function run() {
+  const conn = await mysql.createConnection({
+    ...getDbConfig(),
+    multipleStatements: true
+  });
+
+  const schema = fs.readFileSync(path.resolve(process.cwd(), 'database', 'schema.sql'), 'utf8');
+  const seed = fs.readFileSync(path.resolve(process.cwd(), 'database', 'seed.sql'), 'utf8');
+
+  await conn.query(schema);
+  await conn.query(seed);
+
+  console.log('Database initialized and seeded.');
+  await conn.end();
+}
+
+run().catch((err) => {
+  console.error('DB init failed:', err);
+  process.exit(1);
 });
-
-module.exports = pool;
