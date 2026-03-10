@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS db_1800soles_stock_management;
-USE db_1800soles_stock_management;
+CREATE DATABASE IF NOT EXISTS db_stock;
+USE db_stock;
 
 CREATE TABLE IF NOT EXISTS users (
   user_id CHAR(8) PRIMARY KEY,
