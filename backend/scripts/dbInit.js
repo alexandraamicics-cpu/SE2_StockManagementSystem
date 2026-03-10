@@ -37,13 +37,36 @@ async function connectWithRetry(attempts = 10, delayMs = 3000) {
   throw lastError;
 }
 
+
+function prepareSchemaSql(schema, databaseName) {
+  const sanitized = String(schema || '')
+    .replace(/^\s*CREATE\s+DATABASE\s+IF\s+NOT\s+EXISTS\s+[^;]+;\s*$/gim, '')
+    .replace(/^\s*USE\s+[^;]+;\s*$/gim, '')
+    .trim();
+
+  return `CREATE DATABASE IF NOT EXISTS \`${databaseName}\`;
+USE \`${databaseName}\`;
+${sanitized}`;
+}
+
+function prepareSeedSql(seed, databaseName) {
+  const sanitized = String(seed || '')
+    .replace(/^\s*USE\s+[^;]+;\s*$/gim, '')
+    .trim();
+
+  return `USE \`${databaseName}\`;
+${sanitized}`;
+}
+
 async function run() {
   validateDbConfig(dbConfig);
 
   const conn = await connectWithRetry();
 
-  const schema = fs.readFileSync(path.resolve(process.cwd(), 'database', 'schema.sql'), 'utf8');
-  const seed = fs.readFileSync(path.resolve(process.cwd(), 'database', 'seed.sql'), 'utf8');
+  const rawSchema = fs.readFileSync(path.resolve(process.cwd(), 'database', 'schema.sql'), 'utf8');
+  const rawSeed = fs.readFileSync(path.resolve(process.cwd(), 'database', 'seed.sql'), 'utf8');
+  const schema = prepareSchemaSql(rawSchema, dbConfig.database);
+  const seed = prepareSeedSql(rawSeed, dbConfig.database);
 
   await conn.query(schema);
   await conn.query(seed);
