@@ -4,6 +4,7 @@
   "description": "1800 Soles – Stock Management System (Express + MySQL + vanilla JS)",
   "main": "backend/index.js",
   "scripts": {
+    "start": "node backend/index.js",
     "dev": "nodemon backend/index.js",
     "db:init": "node backend/scripts/dbInit.js",
     "test": "echo \"No automated tests yet\""
