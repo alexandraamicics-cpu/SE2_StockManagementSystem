@@ -5,7 +5,6 @@ const MySQLStore = require('express-mysql-session')(session);
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
-const pool = require('./db');
 const fs = require('fs');
 const mysql = require('mysql2/promise');
 
@@ -22,13 +21,43 @@ const overviewRoutes = require('./routes/overview');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'db_1800soles_stock_management',
-  port: Number(process.env.DB_PORT || '3306')
-};
+function getDbConfig() {
+  const {
+    DATABASE_URL,
+    MYSQL_URL,
+    DB_HOST,
+    DB_USER,
+    DB_PASSWORD,
+    DB_NAME,
+    DB_PORT,
+    MYSQLHOST,
+    MYSQLUSER,
+    MYSQLPASSWORD,
+    MYSQLDATABASE,
+    MYSQLPORT
+  } = process.env;
+
+  if (DATABASE_URL || MYSQL_URL) {
+    const url = new URL(DATABASE_URL || MYSQL_URL);
+    return {
+      host: url.hostname,
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database: decodeURIComponent(url.pathname.replace(/^\//, '')),
+      port: Number(url.port || 3306)
+    };
+  }
+
+  return {
+    host: DB_HOST || MYSQLHOST || 'localhost',
+    user: DB_USER || MYSQLUSER || 'root',
+    password: DB_PASSWORD || MYSQLPASSWORD || '',
+    database: DB_NAME || MYSQLDATABASE || 'db_stock',
+    port: Number(DB_PORT || MYSQLPORT || '3306')
+  };
+}
+
+const dbConfig = getDbConfig();
 
 async function ensureSchema() {
   const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
@@ -70,13 +99,18 @@ async function start() {
   }
 
   const sessionStore = new MySQLStore(dbConfig);
+  app.set('trust proxy', 1);
   app.use(session({
     key: 'sessid',
     secret: process.env.SESSION_SECRET || 'secret',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 4 } // 4 hours
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 4,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    }
   }));
 
   app.use('/api/auth', authRoutes);
@@ -87,9 +121,9 @@ async function start() {
   app.use('/api/overview', overviewRoutes);
   app.use('/api/settings', settingsRoutes);
 
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(process.cwd(), 'frontend', 'index.html'));
-});
+  app.get('/', (_req, res) => {
+    res.sendFile(path.join(process.cwd(), 'frontend', 'index.html'));
+  });
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });
